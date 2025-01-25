@@ -109,12 +109,19 @@ end
 
 RegisterNetEvent("mark_production:getItem")
 AddEventHandler("mark_production:getItem", function(current_item)
+
+    local source = source 
+    local user_id = vRP.getUserId(source)
+
     -- Decodificar o JSON recebido em uma tabela Lua
     local data_by_list = json.decode(current_item)
     print("Item recebido:", json.encode(data_by_list))
+    print(data_by_list.item)
+    print(data_by_list.quantidade)
 
     local dataResponse = getData() -- Supondo que esta função retorne uma tabela
     print("Lista atual:", json.encode(dataResponse))
+
 
     -- Localizar o índice do item na tabela
     local itemIndex = nil
@@ -125,15 +132,38 @@ AddEventHandler("mark_production:getItem", function(current_item)
         end
     end
 
+    
     if itemIndex then
+        vRP.giveInventoryItem(user_id, data_by_list.item, data_by_list.quantidade, true)
         table.remove(dataResponse, itemIndex)
         print("Item removido com sucesso!")
     else
         print("Item não encontrado na lista!")
     end
 
+    local newList = json.encode(dataResponse)
     -- Exibir a lista atualizada
-    print("Lista atualizada:", json.encode(dataResponse))
+    print("Lista atualizada:",newList )
+
+    local current_query = "UPDATE facs_produced SET produced = ? WHERE org = ?"
+    exports.oxmysql:update_async(current_query,{newList,ORG_NAME})
+
+    
+    SetTimeout(1000,function()
+        
+        local newDataResponse = getData()
+                
+        if newDataResponse then
+            TriggerClientEvent("mark_production:openNUI", source, newDataResponse)
+        else
+            print("Erro ao buscar novos dados para org: " .. ORG_NAME)
+            TriggerClientEvent("Notify", source, "negado", "Erro ao buscar dados da organização.", 10)
+        end
+
+    end)
+
+    
+
 end)
 
 

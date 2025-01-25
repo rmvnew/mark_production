@@ -13,6 +13,13 @@ RegisterCommand('prod',function (source,args,rawCommand)
     
 end)
 
+RegisterNetEvent("mark_production:alertSuccess")
+AddEventHandler("mark_production:alertSuccess",function(source)
+
+    PlaySoundFrontend(-1, "PICK_UP", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
+
+end)
+
 -- abrir BUI se tiver permissao
 RegisterNetEvent("mark_production:openNUI")
 AddEventHandler("mark_production:openNUI",function (dataResponse)
