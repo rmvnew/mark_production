@@ -63,48 +63,7 @@ function getData()
 
 end
 
--- RegisterNetEvent("mark_production:checkPermission")
--- AddEventHandler("mark_production:checkPermission", function(args)
---     local source = source
---     local user_id = vRP.getUserId(source)
---     local org_name = args[1]
 
---     -- Consulta ao banco
---     local permissionTable = exports.oxmysql:query_async('SELECT permission FROM facs_produced WHERE org = ?', {org_name})
-    
---     -- Verifica se há resultados
---     if permissionTable and #permissionTable > 0 then
---         local permission = permissionTable[1].permission
-
---         -- Verifica se a permissão não é NULL ou vazia
---         if permission and permission ~= "NULL" and permission ~= "" then
---             print("Permissão encontrada:", permission)
---         else
---             print("Permissão não definida ou nula para esta organização:", org_name)
---         end
---     else
---         print("Nenhuma organização encontrada com o nome:", org_name)
---     end
--- end)
-
-
--- RegisterNetEvent("mark_production:getItem")
--- AddEventHandler("mark_production:getItem", function(current_item)
-    
-
---     local data_by_list = current_item
---     print(data_by_list)
-
---     local dataResponse = getData()
---     local data_by_db = json.encode(dataResponse)
---     print(data_by_db)
-
---     table.remove(dataResponse,data_by_list)
-
---     print(json.encode(data_by_db))
-    
-   
--- end)
 
 
 RegisterNetEvent("mark_production:getItem")
