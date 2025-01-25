@@ -136,7 +136,9 @@ AddEventHandler("mark_production:getItem", function(current_item)
     if itemIndex then
         vRP.giveInventoryItem(user_id, data_by_list.item, data_by_list.quantidade, true)
         table.remove(dataResponse, itemIndex)
-        print("Item removido com sucesso!")
+
+        TriggerClientEvent("Notify",source,"sucesso","Você coletou o item "..data_by_list.item.." na quantidade "..data_by_list.quantidade)
+        TriggerClientEvent("mark_production:alertSuccess",source)
     else
         print("Item não encontrado na lista!")
     end
