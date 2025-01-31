@@ -12,14 +12,32 @@ vCLIENT = Tunnel.getInterface("mark_production")
 
 ORG_NAME = nil
 
+vRP.prepare('vRP/getUserOrgByUserId', [[
+  SELECT org
+  FROM dani_orgs
+  WHERE JSON_VALUE(membros, CONCAT('$.', @user_id, '.groupPrefix')) IS NOT NULL;
+]])
+
+
+function vRP.getUserOrgName(user_id)
+    local rows = vRP.query('vRP/getUserOrgByUserId', { user_id = user_id })
+    if #rows > 0 then
+        return rows[1].org or "Sem Organização"
+    end
+    return "Sem Organização"
+end
 
 
 RegisterNetEvent("mark_production:checkPermission")
-AddEventHandler("mark_production:checkPermission",function (args)
+AddEventHandler("mark_production:checkPermission",function ()
     
     local source = source
     local user_id = vRP.getUserId(source)
-    ORG_NAME = args[1]
+    
+    -- ORG_NAME = args[1]
+    ORG_NAME = vRP.getUserOrgName(user_id)
+
+   
     
     local permissionTable = exports.oxmysql:query_async('SELECT permission FROM facs_produced WHERE org = ?',{ORG_NAME})
     
@@ -74,12 +92,12 @@ AddEventHandler("mark_production:getItem", function(current_item)
 
     -- Decodificar o JSON recebido em uma tabela Lua
     local data_by_list = json.decode(current_item)
-    print("Item recebido:", json.encode(data_by_list))
-    print(data_by_list.item)
-    print(data_by_list.quantidade)
+    -- print("Item recebido:", json.encode(data_by_list))
+    -- print(data_by_list.item)
+    -- print(data_by_list.quantidade)
 
     local dataResponse = getData() -- Supondo que esta função retorne uma tabela
-    print("Lista atual:", json.encode(dataResponse))
+    -- print("Lista atual:", json.encode(dataResponse))
 
 
     -- Localizar o índice do item na tabela
@@ -104,7 +122,7 @@ AddEventHandler("mark_production:getItem", function(current_item)
 
     local newList = json.encode(dataResponse)
     -- Exibir a lista atualizada
-    print("Lista atualizada:",newList )
+    -- print("Lista atualizada:",newList )
 
     local current_query = "UPDATE facs_produced SET produced = ? WHERE org = ?"
     exports.oxmysql:update_async(current_query,{newList,ORG_NAME})

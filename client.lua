@@ -7,9 +7,9 @@ Tunnel.bindInterface("mark_production",src)
 vSERVER = Tunnel.getInterface("mark_production")
 
 
-RegisterCommand('prod',function (source,args,rawCommand)
+RegisterCommand('prod',function ()
 
-    TriggerServerEvent("mark_production:checkPermission",args)
+    TriggerServerEvent("mark_production:checkPermission")
     
 end)
 
