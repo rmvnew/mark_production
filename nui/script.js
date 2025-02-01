@@ -13,8 +13,8 @@ $(document).ready(()=>{
 
         console.log(data.dataResponse)
 
-        if(data.hasPermission ==='open'){
-            console.log("Chegou no JS")
+        if(data.hasPermission ==='open' && data.dataResponse.length > 0){
+            console.log("Chegou no JS com dados")
             items = data.dataResponse.map((entry)=>{
                 return {
                     quantidade: entry.quantidade,
@@ -24,8 +24,9 @@ $(document).ready(()=>{
             renderItems();
             current_painel.style.display = 'block'
         }else{
-            console.log("Chegou no JS")
+            console.log("Chegou no JS sem dados")
             current_painel.style.display = 'none'
+            sendDataToClient('noitems',null)
         }
 
     })
@@ -33,24 +34,42 @@ $(document).ready(()=>{
 })
 
 
+
 $(document).keyup((event)=>{
     if(event.key ==='Escape'){
-        fetch(`https://mark_production/closeCurrentNUI`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify('ok')
-        }).then(() => {
-            console.log("Mensagem enviada ao client.lua");
-        }).catch((error) => {
-            console.error("Erro ao enviar para o cliente:", error);
-        });
+
+        sendDataToClient('closeCurrentNUI',null)
+
     }
 })
 
 
 
+function sendDataToClient(url,data){
+
+    let current_data 
+    if(data){
+        current_data = data
+    } else{
+        current_data = 'ok'
+    }
+
+    let config = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify(current_data)
+    }
+    fetch(`https://${GetParentResourceName()}/${url}`, config)
+    .then(() =>{
+        console.log("Mensagem enviada ao client.lua");
+    }).catch(error => {
+        console.log('Error: ',error);
+        
+    })
+
+}
 
 
 const itemList = document.getElementById('item-list');
@@ -94,14 +113,7 @@ function collectItem(index) {
         quantidade: items[index].quantidade
     }
 
-    let config = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: JSON.stringify(item)
-    }
-    fetch(`https://${GetParentResourceName()}/getItem`, config)
+    sendDataToClient('getItem',item)
     
 }
 

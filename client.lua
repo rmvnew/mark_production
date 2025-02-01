@@ -44,6 +44,15 @@ AddEventHandler("mark_production:closeNUI", function()
 
 end)
 
+RegisterNUICallback("noitems",function (item)
+ 
+    SetNuiFocus(false,false)
+    TriggerEvent("Notify","aviso","Nenhum item produzido para coletar!")
+    PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
+
+
+end)
+
 -- fecha com ESC
 RegisterNUICallback("closeCurrentNUI",function(data,cb)
     SetNuiFocus(false,false)
