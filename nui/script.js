@@ -8,13 +8,12 @@ $(document).ready(()=>{
 
     window.addEventListener('message',(event)=>{
 
-        let current_painel = document.getElementById('container_id')
+        let current_painel = document.getElementById('body_id')
+
         const data = event.data
 
-        console.log(data.dataResponse)
-
         if(data.hasPermission ==='open' && data.dataResponse.length > 0){
-            console.log("Chegou no JS com dados")
+           
             items = data.dataResponse.map((entry)=>{
                 return {
                     quantidade: entry.quantidade,
@@ -22,9 +21,14 @@ $(document).ready(()=>{
                 }
             })
             renderItems();
-            current_painel.style.display = 'block'
+            current_painel.style.display = 'flex'
+
+        }else if(data.hasPermission ==='unauthorized'){
+
+             current_painel.style.display = 'none'
+
         }else{
-            console.log("Chegou no JS sem dados")
+            
             current_painel.style.display = 'none'
             sendDataToClient('noitems',null)
         }
@@ -72,34 +76,62 @@ function sendDataToClient(url,data){
 }
 
 
-const itemList = document.getElementById('item-list');
+// const itemList = document.getElementById('item-list');
 
-// Função para criar a lista de itens
+// // Função para criar a lista de itens
+// function renderItems() {
+//     itemList.innerHTML = ''; // Limpa a lista antes de renderizar
+
+//     console.log(items)
+//     items.forEach((data, index) => {
+//         // Cria o elemento do item
+//         const itemDiv = document.createElement('div');
+//         itemDiv.className = 'item';
+
+//         // Cria o texto do item
+//         const itemText = document.createElement('div');
+//         itemText.innerHTML = `<span class="item-name">${data.item}</span> - <span class="item-quantity">Quantidade: ${data.quantidade}</span>`;
+//         itemDiv.appendChild(itemText);
+
+//         // Cria o botão de coletar
+//         const collectButton = document.createElement('button');
+//         collectButton.className = 'collect-btn';
+//         collectButton.textContent = 'Coletar';
+//         collectButton.addEventListener('click', () => {
+//             collectItem(index);
+//         });
+//         itemDiv.appendChild(collectButton);
+
+//         // Adiciona o item à lista
+//         itemList.appendChild(itemDiv);
+//     });
+// }
+
+
+const tbody = document.getElementById("my_tbody");
+
+// Função para renderizar a tabela
 function renderItems() {
-    itemList.innerHTML = ''; // Limpa a lista antes de renderizar
+    tbody.innerHTML = ''; // Limpa a tabela antes de renderizar
 
-    console.log(items)
-    items.forEach((data, index) => {
-        // Cria o elemento do item
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'item';
+    items.forEach(({ item, quantidade }, index) => {
+        let row = document.createElement("tr");
 
-        // Cria o texto do item
-        const itemText = document.createElement('div');
-        itemText.innerHTML = `<span class="item-name">${data.item}</span> - <span class="item-quantity">Quantidade: ${data.quantidade}</span>`;
-        itemDiv.appendChild(itemText);
+        row.innerHTML = `
+            <td>${item}</td>
+            <td>${quantidade}</td>
+            <td><button class="collect-btn" data-index="${index}">Coletar</button></td>
+        `;
 
-        // Cria o botão de coletar
-        const collectButton = document.createElement('button');
-        collectButton.className = 'collect-btn';
-        collectButton.textContent = 'Coletar';
-        collectButton.addEventListener('click', () => {
+        tbody.appendChild(row);
+    });
+
+    // Adiciona evento de clique aos botões de coletar
+    document.querySelectorAll(".collect-btn").forEach(button => {
+        button.addEventListener("click", function() {
+            let index = this.getAttribute("data-index");
             collectItem(index);
         });
-        itemDiv.appendChild(collectButton);
-
-        // Adiciona o item à lista
-        itemList.appendChild(itemDiv);
     });
 }
 

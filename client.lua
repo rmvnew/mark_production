@@ -9,9 +9,17 @@ vSERVER = Tunnel.getInterface("mark_production")
 
 RegisterCommand('prod',function ()
 
-    TriggerServerEvent("mark_production:checkPermission")
+    checkPermission()
     
 end)
+
+function checkPermission()
+    TriggerServerEvent("mark_production:checkPermission")
+end
+
+exports('checkPermission',function ()
+    checkPermission()
+end) 
 
 RegisterNetEvent("mark_production:alertSuccess")
 AddEventHandler("mark_production:alertSuccess",function(source)
@@ -52,6 +60,21 @@ RegisterNUICallback("noitems",function (item)
 
 
 end)
+
+
+RegisterNetEvent("mark_production:unauthorized")
+AddEventHandler("mark_production:unauthorized", function()
+
+    TriggerEvent("Notify","negado","Você não tem permissão para acessar este serviço")
+    PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
+    SetNuiFocus(false,false)
+    SendNUIMessage({hasPermission = 'unauthorized'})
+
+end)
+
+
+
+
 
 -- fecha com ESC
 RegisterNUICallback("closeCurrentNUI",function(data,cb)

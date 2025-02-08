@@ -9,23 +9,39 @@ src = {}
 Tunnel.bindInterface("mark_production", src)
 Proxy.addInterface("mark_production", src)
 vCLIENT = Tunnel.getInterface("mark_production")
+local cfg = module("vrp", "cfg/groups")
 
 ORG_NAME = nil
 
-vRP.prepare('vRP/getUserOrgByUserId', [[
-  SELECT org
-  FROM dani_orgs
-  WHERE JSON_VALUE(membros, CONCAT('$.', @user_id, '.groupPrefix')) IS NOT NULL;
-]])
 
+function getUserOrganization(user_id)
+    if not user_id then return nil end
 
-function vRP.getUserOrgName(user_id)
-    local rows = vRP.query('vRP/getUserOrgByUserId', { user_id = user_id })
-    if #rows > 0 then
-        return rows[1].org or "Sem Organização"
+    -- 1) Ler do banco o vRP:datatable
+    local data = vRP.getUData(user_id, "vRP:datatable")
+    if not data or data == "" then
+        return nil
     end
-    return "Sem Organização"
+
+    -- 2) Decodifica o JSON
+    local datatable = json.decode(data)
+    if not datatable or not datatable.groups then
+        return nil
+    end
+
+    -- 3) Percorre todos os grupos do player
+    for groupName, _ in pairs(datatable.groups) do
+        local groupInfo = cfg.groups[groupName]
+        -- Verifica se esse grupo existe no cfg.groups e tem gtype = "org"
+        if groupInfo and groupInfo._config and groupInfo._config.gtype == "org" then
+            -- Retorna o orgName imediatamente
+            return groupInfo._config.orgName
+        end
+    end
+
+    return nil
 end
+
 
 
 RegisterNetEvent("mark_production:checkPermission")
@@ -35,37 +51,44 @@ AddEventHandler("mark_production:checkPermission",function ()
     local user_id = vRP.getUserId(source)
     
     -- ORG_NAME = args[1]
-    ORG_NAME = vRP.getUserOrgName(user_id)
+    ORG_NAME = getUserOrganization(user_id)
 
-   
     
-    local permissionTable = exports.oxmysql:query_async('SELECT permission FROM facs_produced WHERE org = ?',{ORG_NAME})
-    
-    if permissionTable[1].permission and #permissionTable[1].permission > 0 then
-       
-        local permission = permissionTable[1].permission
-       
-        if vRP.hasPermission(user_id,permission) then
-            print("Tem permissao")
-            local dataResponse = getData()
-            
-            if dataResponse then
-                TriggerClientEvent("mark_production:openNUI", source, dataResponse)
+   if ORG_NAME ~= nil then
+        local permissionTable = exports.oxmysql:query_async('SELECT permission FROM facs_produced WHERE org = ?',{ORG_NAME})
+
+        
+        
+        if permissionTable[1].permission and #permissionTable[1].permission > 0 then
+        
+            local permission = permissionTable[1].permission
+        
+            if vRP.hasPermission(user_id,permission) then
+                print("Tem permissao")
+                local dataResponse = getData()
+                
+                if dataResponse then
+                    TriggerClientEvent("mark_production:openNUI", source, dataResponse)
+                else
+                    print("Erro ao buscar dados para org: " .. ORG_NAME)
+                    TriggerClientEvent("Notify", source, "negado", "Erro ao buscar dados da organização.", 10)
+                end
             else
-                print("Erro ao buscar dados para org: " .. ORG_NAME)
-                TriggerClientEvent("Notify", source, "negado", "Erro ao buscar dados da organização.", 10)
+                TriggerClientEvent("mark_production:unauthorized",source)
             end
+
         else
-            print("Não Tem permissao")
-            TriggerClientEvent("mark_production:closeNUI",source)
-            TriggerClientEvent("Notify",source,"negado","Você não tem permissão para acessar este serviço",10)
+            TriggerClientEvent("Notify",source,"negado","Deposito não encontrado",10)
         end
-
-
-    end
-
+   else
+    TriggerClientEvent("mark_production:unauthorized",source)
+   end
+    
+    
 
 end)
+
+
 
 
 function getData()
@@ -148,44 +171,3 @@ end)
 
 
 
-RegisterCommand('myquery',function (source)
-
-
-    local obter = "SELECT produced FROM facs_produced WHERE org = ?"
-    local data = exports.oxmysql:query_async(obter, {'Bahamas'})
-    
-    if data and #data > 0 then -- Verifica se há resultados
-        -- Decodifica o campo 'produced' (que está no formato JSON) em uma tabela
-        local dataRes = json.decode(data[1].produced)
-    
-        if type(dataRes) ~= "table" then
-            dataRes = {} -- Garante que seja uma tabela, caso esteja vazio ou inválido
-        end
-    
-        local novoItem = {
-            quantidade = 10,
-            item = "cafe_puro"
-        }
-    
-        -- Adiciona o novo item à tabela
-        table.insert(dataRes, novoItem)
-    
-        -- Opcional: Codifica novamente para JSON, caso precise salvar ou enviar de volta
-        local dataResJson = json.encode(dataRes)
-    
-        print("Tabela atualizada com o novo item:")
-        print(dataResJson) -- Exibe a tabela atualizada
-    else
-        print("Nenhum dado encontrado.")
-    end
-    
-    
-    
-    -- local current_query = "UPDATE facs_produced SET produced = ? WHERE org = ?"
-
-    -- local itens = json.encode({item = 'cafe_com_leite',quantidade = 5})
-
-
-    -- exports.oxmysql:update_async(current_query,{itens,'Bahamas'})
-
-end,false)
